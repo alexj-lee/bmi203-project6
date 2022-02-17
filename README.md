@@ -1,3 +1,5 @@
+![BuildStatus](https://github.com/alexj-lee/bmi203-project6/actions/workflows/test.yml/badge.svg)
+
 # Project 6
 Logistic regression and application to medical record data
 
