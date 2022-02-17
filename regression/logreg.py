@@ -3,8 +3,11 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-class BaseRegressor():
-    def __init__(self, num_feats, learning_rate=0.1, tol=0.001, max_iter=100, batch_size=12):
+
+class BaseRegressor:
+    def __init__(
+        self, num_feats, learning_rate=0.1, tol=0.001, max_iter=100, batch_size=12
+    ):
         # initializing parameters
         self.W = np.random.randn(num_feats + 1).flatten()
         # assigning hyperparameters
@@ -16,16 +19,16 @@ class BaseRegressor():
         # defining list for storing loss history
         self.loss_history_train = []
         self.loss_history_val = []
-        
+
     def calculate_gradient(self, X, y):
         pass
-    
+
     def loss_function(self, y_true, y_pred):
         pass
-    
+
     def make_prediction(self, X):
         pass
-    
+
     def train_model(self, X_train, y_train, X_val, y_val):
         # Padding data with vector of ones for bias term
         X_train = np.hstack([X_train, np.ones((X_train.shape[0], 1))])
@@ -41,7 +44,7 @@ class BaseRegressor():
             np.random.shuffle(shuffle_arr)
             X_train = shuffle_arr[:, :-1]
             y_train = shuffle_arr[:, -1].flatten()
-            num_batches = int(X_train.shape[0]/self.batch_size) + 1
+            num_batches = int(X_train.shape[0] / self.batch_size) + 1
             X_batch = np.array_split(X_train, num_batches)
             y_batch = np.array_split(y_train, num_batches)
             # Generating list to save the param updates per batch
@@ -59,7 +62,7 @@ class BaseRegressor():
                 # Calculating gradient of loss function with respect to each parameter
                 grad = self.calculate_gradient(X_train, y_train)
                 # Updating parameters
-                new_W = prev_W - self.lr * grad 
+                new_W = prev_W - self.lr * grad
                 self.W = new_W
                 # Saving step size
                 update_size_epoch.append(np.abs(new_W - prev_W))
@@ -70,7 +73,7 @@ class BaseRegressor():
             prev_update_size = np.mean(np.array(update_size_epoch))
             # Updating iteration number
             iteration += 1
-    
+
     def plot_loss_history(self):
         """
         Plots the loss history after training is complete.
@@ -78,68 +81,75 @@ class BaseRegressor():
         loss_hist = self.loss_history_train
         loss_hist_val = self.loss_history_val
         assert len(loss_hist) > 0, "Need to run training before plotting loss history"
-        fig, axs = plt.subplots(2, figsize=(8,8))
-        fig.suptitle('Loss History')
+        fig, axs = plt.subplots(2, figsize=(8, 8))
+        fig.suptitle("Loss History")
         axs[0].plot(np.arange(len(loss_hist)), loss_hist)
-        axs[0].set_title('Training Loss')
+        axs[0].set_title("Training Loss")
         axs[1].plot(np.arange(len(loss_hist_val)), loss_hist_val)
-        axs[1].set_title('Validation Loss')
-        plt.xlabel('Steps')
-        axs[0].set_ylabel('Train Loss')
-        axs[1].set_ylabel('Val Loss')
+        axs[1].set_title("Validation Loss")
+        plt.xlabel("Steps")
+        axs[0].set_ylabel("Train Loss")
+        axs[1].set_ylabel("Val Loss")
         fig.tight_layout()
-        
+
 
 # import required modules
 class LogisticRegression(BaseRegressor):
-    def __init__(self, num_feats, learning_rate=0.1, tol=0.0001, max_iter=100, batch_size=12):
+    def __init__(
+        self, num_feats, learning_rate=0.1, tol=0.0001, max_iter=100, batch_size=12
+    ):
         super().__init__(num_feats, learning_rate, tol, max_iter, batch_size)
-        
-    def calculate_gradient(self, X, y) -> np.ndarray:
+
+    def calculate_gradient(self, X: np.ndarray, y: np.ndarray) -> np.ndarray:
         """
-        TODO: write function to calculate gradient of the
-        logistic loss function to update the weights 
+        From a data matrix X and labels y, compute the gradient of the loss wrt the parameters self.W
 
-        Params:
-            X (np.ndarray): feature values
-            y (np.array): labels corresponding to X
+        Args:
+            X (np.ndarray): data matrix
+            y (np.ndarray): labels vector
 
-        Returns: 
-            gradients for given loss function (np.ndarray)
-        """
-        pass
-    
-    def loss_function(self, X, y) -> float:
-        """
-        TODO: get y_pred from input X and implement binary cross 
-        entropy loss function. Binary cross entropy loss assumes that 
-        the classification is either 1 or 0, not continuous, making
-        it more suited for (binary) classification.
-
-        Params:
-            X (np.ndarray): feature values
-            y (np.array): labels corresponding to X
-
-        Returns: 
-            average loss 
-        """
-        pass
-    
-    def make_prediction(self, X) -> np.array:
-        """
-        TODO: implement logistic function to get estimates (y_pred) for input
-        X values. The logistic function is a transformation of the linear model W.T(X)+b 
-        into an "S-shaped" curve that can be used for binary classification
-
-        Params: 
-            X (np.ndarray): Set of feature values to make predictions for
-
-        Returns: 
-            y_pred for given X
+        Returns:
+            np.ndarray: Gradient of each parameter in self.W
         """
 
-        pass
+        p = self.make_prediction(X)
+        gradient = X.T.dot(p - y)
+        return gradient / len(X)
 
+    def loss_function(self, X: np.ndarray, y: np.ndarray) -> float:
+        """
+        From a data matrix X and labels y, compute the loss function (cross entropy loss)
 
+        Args:
+            X (np.ndarray): data matrix
+            y (np.ndarray): labels vector
 
-    
+        Returns:
+            float: Average loss across the batch
+        """
+
+        p = self.make_prediction(X)
+        p = np.clip(
+            p, 0.001, 0.999
+        )  # too lazy to implement log sum exp, but need to prevent inf/nan in log calculation
+
+        loss = 0
+        loss += -y * np.log(p)  # for positive class
+        loss += -(1 - y) * np.log(1 - p)  # for negative class
+
+        return loss.mean()
+
+    def make_prediction(self, X: np.ndarray) -> np.array:
+        """
+        From a data matrix X, compute linear projection and then sigmoid of results to generate class predictions.
+
+        Args:
+            X (np.ndarray): data matrix
+
+        Returns:
+            np.array: class predictions for
+        """
+
+        logits = X.dot(self.W)
+        p = 1 / (1 + np.exp(-logits))  # restrict to 0-1 range
+        return np.rint(p)

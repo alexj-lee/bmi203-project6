@@ -1,7 +1,15 @@
+# Testing notebook
+*ipynb*
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
+
+working.py
+
+# open files
+*.swp
 
 # C extensions
 *.so
@@ -109,7 +117,6 @@ venv/
 ENV/
 env.bak/
 venv.bak/
-.DS_Store
 
 # Spyder project settings
 .spyderproject
