@@ -35,10 +35,13 @@ def test_updates(nsclc_data, gradient_test, loss_test):
 
     X_train, X_test, y_train, y_test = nsclc_data
 
-    regressor = logreg.LogisticRegression(X_train.shape[1], max_iter=10000)
+    regressor = logreg.LogisticRegression(
+        X_train.shape[1], max_iter=10000, learning_rate=0.0001, batch_size=200, tol=1e-6
+    )
 
     X_train_intercept = np.c_[X_train, np.ones(len(X_train))]
     gradient = regressor.calculate_gradient(X_train_intercept, y_train)
+
     loss = regressor.loss_function(X_train_intercept, y_train)
 
     assert np.allclose(
@@ -62,7 +65,9 @@ def test_predict(nsclc_data):
     """
 
     X_train, X_test, y_train, y_test = nsclc_data
-    regressor = logreg.LogisticRegression(X_train.shape[1], max_iter=10000)
+    regressor = logreg.LogisticRegression(
+        X_train.shape[1], max_iter=10000, learning_rate=0.001, batch_size=200, tol=1e-6
+    )
 
     w = regressor.W
     regressor.train_model(X_train, y_train, X_test, y_test)
@@ -75,6 +80,8 @@ def test_predict(nsclc_data):
     preds = regressor.make_prediction(
         np.c_[X_test, np.ones(len(X_test))]
     )  # put on intercept
+
+    preds = np.rint(preds)  # round probs to 0, 1
 
     correct = (
         np.bitwise_and(preds == 1, y_test == 1).sum()

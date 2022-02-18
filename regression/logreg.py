@@ -113,8 +113,8 @@ class LogisticRegression(BaseRegressor):
         """
 
         p = self.make_prediction(X)
-        gradient = X.T.dot(p - y)
-        return gradient / len(X)
+        gradient = -X.T.dot(y - p)
+        return gradient / len(gradient)
 
     def loss_function(self, X: np.ndarray, y: np.ndarray) -> float:
         """
@@ -130,14 +130,12 @@ class LogisticRegression(BaseRegressor):
 
         p = self.make_prediction(X)
         p = np.clip(
-            p, 0.001, 0.999
+            p, 0.00001, 0.99999
         )  # too lazy to implement log sum exp, but need to prevent inf/nan in log calculation
 
-        loss = 0
-        loss += -y * np.log(p)  # for positive class
-        loss += -(1 - y) * np.log(1 - p)  # for negative class
+        loss = -(y.dot(np.log(p)) + (1 - y).dot(np.log(1 - p)))
 
-        return loss.mean()
+        return loss / len(p)
 
     def make_prediction(self, X: np.ndarray) -> np.array:
         """
@@ -152,4 +150,4 @@ class LogisticRegression(BaseRegressor):
 
         logits = X.dot(self.W)
         p = 1 / (1 + np.exp(-logits))  # restrict to 0-1 range
-        return np.rint(p)
+        return p
