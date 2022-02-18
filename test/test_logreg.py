@@ -87,6 +87,7 @@ def test_predict(nsclc_data):
         np.bitwise_and(preds == 1, y_test == 1).sum()
         + np.bitwise_and(preds == 0, y_test == 0).sum()
     )
+    
     accuracy = correct / len(X_test)
     assert (
         accuracy > 0.5
